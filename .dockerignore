@@ -1,0 +1,43 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build / output
+dist
+build
+coverage
+.nyc_output
+
+# Compiled migration/seed artifacts (Knex runs .ts via ts-node; exclude .d.ts and .js)
+migrations/*.d.ts
+migrations/*.js
+migrations/*.js.map
+seeds/*.d.ts
+seeds/*.js
+seeds/*.js.map
+
+# Git
+.git
+.gitignore
+
+# IDE / OS
+.idea
+.vscode
+.DS_Store
+*.log
+
+# Env (loaded via compose; do not bake into image)
+.env
+.env.*
+!.env.example
+
+# Tests / docs
+test
+*.md
+prompts
+
+# Misc
+.temp
+.tmp
+report.*.json
