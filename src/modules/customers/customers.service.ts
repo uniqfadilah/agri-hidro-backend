@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
 import { Customer, CustomerItem } from '../../models';
+import { formatPrice } from '../../utils/format-price';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 
@@ -10,7 +11,7 @@ export type CustomerItemResponse = {
   customer_id: string;
   item_id: string;
   item_name: string;
-  price: string;
+  price: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -49,7 +50,7 @@ export class CustomersService {
       customer_id: r.customerId,
       item_id: r.itemId,
       item_name: r.item?.name ?? '',
-      price: r.price,
+      price: formatPrice(r.price),
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
     }));

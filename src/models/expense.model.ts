@@ -12,7 +12,7 @@ export class Expense extends BaseModel {
   declare id: string;
   declare userId: string;
   declare sellerId: string;
-  declare status: 'paid' | 'un_paid';
+  declare status: 'paid' | 'unpaid';
   declare createdAt: Date;
   declare updatedAt: Date;
 

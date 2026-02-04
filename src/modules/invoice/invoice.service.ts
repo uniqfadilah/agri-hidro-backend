@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
@@ -18,13 +19,15 @@ import {
   type InvoiceStatus,
 } from '../../models';
 import type { InvoiceStatusType } from './dto/update-invoice-status.dto';
+import { formatPrice } from '../../utils/format-price';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceStatusDto } from './dto/update-invoice-status.dto';
 
 export type InvoiceItemResponse = {
   id: string;
   item_id: string;
-  price: string;
+  item_name?: string;
+  price: number;
   quantity: number;
   createdAt: Date;
   updatedAt: Date;
@@ -34,6 +37,8 @@ export type InvoiceResponse = {
   id: string;
   customer_id: string;
   user_id: string;
+  customer_name?: string;
+  user_name?: string;
   status: InvoiceStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -79,7 +84,10 @@ export class InvoiceService {
 
     const withItems = await Invoice.query()
       .findById(invoice.id)
-      .withGraphFetched('invoiceItems');
+      .withGraphFetched('invoiceItems.item')
+      .modifyGraph('invoiceItems.item', (qb) =>
+        qb.select('items.id', 'items.name'),
+      );
     if (!withItems) throw new NotFoundException('Invoice not found');
     return this.toResponse(withItems);
   }
@@ -87,7 +95,11 @@ export class InvoiceService {
   async findAll(
     userId: string,
     isAdmin: boolean,
-    status?: InvoiceStatusType,
+    options?: {
+      status?: InvoiceStatusType;
+      month?: string;
+      customer_id?: string;
+    },
   ): Promise<InvoiceResponse[]> {
     const query = Invoice.query()
       .select(
@@ -98,17 +110,31 @@ export class InvoiceService {
         'created_at',
         'updated_at',
       )
-      .withGraphFetched('invoiceItems')
+      .withGraphFetched('[invoiceItems.item, customer, user]')
+      .modifyGraph('invoiceItems.item', (qb) => qb.select('id', 'name'))
       .orderBy('created_at', 'desc');
 
     if (!isAdmin) {
       query.where('user_id', userId);
     }
-    if (status) {
-      query.where('status', status);
+    if (options?.status) {
+      query.where('status', options.status);
+    }
+    if (options?.customer_id) {
+      query.where('customer_id', options.customer_id);
+    }
+    if (options?.month) {
+      const [y, m] = options.month.split('-').map(Number);
+      const start = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
+      const end = new Date(Date.UTC(y, m, 1, 0, 0, 0, 0));
+      query.where('created_at', '>=', start).where('created_at', '<', end);
     }
 
-    const rows = await query;
+    const rows = (await query) as (Invoice & {
+      customer?: { name: string };
+      user?: { username: string };
+      invoiceItems?: (InvoiceItem & { item?: { name: string } })[];
+    })[];
     return rows.map((r) => this.toResponse(r));
   }
 
@@ -119,7 +145,10 @@ export class InvoiceService {
   ): Promise<InvoiceResponse> {
     const invoice = await Invoice.query()
       .findById(id)
-      .withGraphFetched('invoiceItems');
+      .withGraphFetched('invoiceItems.item')
+      .modifyGraph('invoiceItems.item', (qb) =>
+        qb.select('items.id', 'items.name'),
+      );
     if (!invoice) {
       throw new NotFoundException('Invoice not found');
     }
@@ -155,11 +184,18 @@ export class InvoiceService {
       }
     }
 
-    const updated = await Invoice.query().patchAndFetchById(id, {
+    await Invoice.query().patchAndFetchById(id, {
       status: dto.status,
       updatedAt: new Date(),
     });
-    return this.toResponse(updated);
+    const withItems = await Invoice.query()
+      .findById(id)
+      .withGraphFetched('invoiceItems.item')
+      .modifyGraph('invoiceItems.item', (qb) =>
+        qb.select('items.id', 'items.name'),
+      );
+    if (!withItems) throw new NotFoundException('Invoice not found');
+    return this.toResponse(withItems);
   }
 
   async delete(id: string, userId: string, isAdmin: boolean): Promise<void> {
@@ -188,7 +224,10 @@ export class InvoiceService {
       quantity: number;
       createdAt: Date;
       updatedAt: Date;
+      item?: { name: string };
     }>;
+    customer?: { name: string };
+    user?: { username: string };
   }): InvoiceResponse {
     const out: InvoiceResponse = {
       id: invoice.id,
@@ -198,11 +237,18 @@ export class InvoiceService {
       createdAt: invoice.createdAt,
       updatedAt: invoice.updatedAt,
     };
+    if (invoice.customer?.name != null) {
+      out.customer_name = invoice.customer.name;
+    }
+    if (invoice.user?.username != null) {
+      out.user_name = invoice.user.username;
+    }
     if (invoice.invoiceItems?.length) {
       out.invoiceItems = invoice.invoiceItems.map((ii) => ({
         id: ii.id,
         item_id: ii.itemId,
-        price: ii.price,
+        item_name: ii.item?.name,
+        price: formatPrice(ii.price),
         quantity: ii.quantity,
         createdAt: ii.createdAt,
         updatedAt: ii.updatedAt,

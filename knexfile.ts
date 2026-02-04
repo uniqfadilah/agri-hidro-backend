@@ -9,10 +9,12 @@ const config: { [key: string]: Knex.Config } = {
     migrations: {
       directory: './migrations',
       extension: 'ts',
+      loadExtensions: ['.ts'],
     },
     seeds: {
       directory: './seeds',
       extension: 'ts',
+      loadExtensions: ['.ts'],
     },
   },
   production: {
@@ -22,10 +24,12 @@ const config: { [key: string]: Knex.Config } = {
     migrations: {
       directory: './migrations',
       extension: 'ts',
+      loadExtensions: ['.ts'],
     },
     seeds: {
       directory: './seeds',
       extension: 'ts',
+      loadExtensions: ['.ts'],
     },
   },
 };

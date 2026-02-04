@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { Material } from '../../models';
 import { CreateMaterialDto } from './dto/create-material.dto';
@@ -34,5 +34,13 @@ export class MaterialService {
       createdAt: material.createdAt,
       updatedAt: material.updatedAt,
     };
+  }
+
+  async delete(id: string): Promise<void> {
+    const material = await Material.query().findById(id);
+    if (!material) {
+      throw new NotFoundException('Material not found');
+    }
+    await Material.query().deleteById(id);
   }
 }

@@ -3,6 +3,14 @@
 /node_modules
 /build
 
+# Knex migration/seed artifacts (run with .ts via ts-node; do not commit compiled)
+/migrations/*.js
+/migrations/*.d.ts
+/migrations/*.js.map
+/seeds/*.js
+/seeds/*.d.ts
+/seeds/*.js.map
+
 # Logs
 logs
 *.log

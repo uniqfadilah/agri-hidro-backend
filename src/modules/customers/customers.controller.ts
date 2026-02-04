@@ -43,12 +43,12 @@ export class CustomersController {
     return this.customersService.create(dto);
   }
 
-  @Post(':id/customer-items')
-  async createCustomerItem(
+  @Patch(':id/customer-items')
+  async createOrUpdateCustomerItem(
     @Param('id') customerId: string,
     @Body() dto: CreateCustomerItemByCustomerDto,
   ): Promise<CustomerItemResponse> {
-    return this.customerItemService.create({
+    return this.customerItemService.createOrUpdateByCustomerAndItem({
       customer_id: customerId,
       item_id: dto.item_id,
       price: dto.price,

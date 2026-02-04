@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { Customer, CustomerItem, Item } from '../../models';
+import { formatPrice } from '../../utils/format-price';
 import { CreateCustomerItemDto } from './dto/create-customer-item.dto';
 import { UpdateCustomerItemDto } from './dto/update-customer-item.dto';
 
@@ -13,7 +14,7 @@ export type CustomerItemResponse = {
   id: string;
   customer_id: string;
   item_id: string;
-  price: string;
+  price: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -88,6 +89,45 @@ export class CustomerItemService {
     return this.toResponse(customerItem);
   }
 
+  /** Create or update customer-item by customer_id + item_id. */
+  async createOrUpdateByCustomerAndItem(dto: {
+    customer_id: string;
+    item_id: string;
+    price: number;
+  }): Promise<CustomerItemResponse> {
+    const customer = await Customer.query().findById(dto.customer_id);
+    if (!customer) {
+      throw new BadRequestException('Customer not found');
+    }
+    const item = await Item.query().findById(dto.item_id);
+    if (!item) {
+      throw new BadRequestException('Item not found');
+    }
+
+    const existing = await CustomerItem.query()
+      .where('customer_id', dto.customer_id)
+      .where('item_id', dto.item_id)
+      .first();
+
+    if (existing) {
+      const updated = await CustomerItem.query().patchAndFetchById(
+        existing.id,
+        {
+          price: String(dto.price),
+          updatedAt: new Date(),
+        },
+      );
+      return this.toResponse(updated);
+    }
+
+    const customerItem = await CustomerItem.query().insertAndFetch({
+      customerId: dto.customer_id,
+      itemId: dto.item_id,
+      price: String(dto.price),
+    });
+    return this.toResponse(customerItem);
+  }
+
   async update(
     id: string,
     dto: UpdateCustomerItemDto,
@@ -123,7 +163,7 @@ export class CustomerItemService {
       id: row.id,
       customer_id: row.customerId,
       item_id: row.itemId,
-      price: row.price,
+      price: formatPrice(row.price),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

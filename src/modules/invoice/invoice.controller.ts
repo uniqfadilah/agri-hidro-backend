@@ -36,7 +36,11 @@ export class InvoiceController {
     @Query() query: FindAllInvoicesQueryDto,
   ): Promise<InvoiceResponse[]> {
     const isAdmin = user.role === 'admin';
-    return this.invoiceService.findAll(user.id, isAdmin, query.status);
+    return this.invoiceService.findAll(user.id, isAdmin, {
+      status: query.status,
+      month: query.month,
+      customer_id: query.customer_id,
+    });
   }
 
   @Get(':id')
