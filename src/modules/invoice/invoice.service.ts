@@ -184,10 +184,18 @@ export class InvoiceService {
       }
     }
 
-    await Invoice.query().patchAndFetchById(id, {
+    const patch: {
+      status: InvoiceStatusType;
+      updatedAt: Date;
+      createdAt?: Date;
+    } = {
       status: dto.status,
       updatedAt: new Date(),
-    });
+    };
+    if (dto.createdAt != null) {
+      patch.createdAt = new Date(dto.createdAt);
+    }
+    await Invoice.query().patchAndFetchById(id, patch);
     const withItems = await Invoice.query()
       .findById(id)
       .withGraphFetched('invoiceItems.item')

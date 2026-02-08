@@ -1,4 +1,4 @@
-import { IsEnum } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional } from 'class-validator';
 
 export type InvoiceStatusType = 'new' | 'on_progress' | 'done_paid';
 
@@ -7,4 +7,8 @@ export class UpdateInvoiceStatusDto {
     message: 'status must be one of: new, on_progress, done_paid',
   })
   status: InvoiceStatusType;
+
+  @IsOptional()
+  @IsDateString()
+  createdAt?: string;
 }

@@ -201,6 +201,47 @@ docker compose -f docker-compose.prod.yml logs -f app
 
 3. Migrations run automatically on app startup. App listens on port **8080** (or `PORT`). No source mount; config via env.
 
+### Cloudflare Tunnel (optional)
+
+Run **cloudflared on the host** (not in Docker). Install from GitHub (not in default apt):
+
+  ```bash
+  docker compose -f docker-compose.prod.yml up -d --build
+
+  # On the Pi: install cloudflared (one-time) — pick the line that matches your Pi:
+  # 64-bit OS (Raspberry Pi OS 64-bit, aarch64):
+  ARCH=arm64
+  # 32-bit OS (Raspberry Pi OS 32-bit, armv7l):
+  # ARCH=armhf
+
+  sudo curl -sL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${ARCH}.deb" -o /tmp/cloudflared.deb
+  sudo dpkg -i /tmp/cloudflared.deb
+  rm -f /tmp/cloudflared.deb
+  cloudflared --version
+  ```
+
+  Or detect arch automatically and install:
+
+  ```bash
+  ARCH=$(dpkg --print-architecture)
+  case "$ARCH" in
+    arm64)   ARCH=arm64 ;;
+    armhf)   ARCH=armhf ;;
+    *)       echo "Unsupported: $ARCH"; exit 1 ;;
+  esac
+  sudo curl -sL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${ARCH}.deb" -o /tmp/cloudflared.deb
+  sudo dpkg -i /tmp/cloudflared.deb
+  cloudflared --version
+  ```
+
+  Then run the tunnel (use your token from `.env`):
+
+  ```bash
+  cloudflared tunnel --no-autoupdate run --token YOUR_CLOUDFLARE_TUNNEL_TOKEN
+  ```
+
+  In **Cloudflare Zero Trust** → your tunnel → **Public Hostname**, set the service to **`http://localhost:8080`**.
+
 ---
 
 ## Database (Knex)
