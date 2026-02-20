@@ -8,6 +8,10 @@ import {
 import { Expose, Transform } from 'class-transformer';
 
 export class CreateTandonDto {
+  @IsString()
+  @Expose()
+  name: string;
+
   @IsOptional()
   @IsString()
   @Length(4, 4, { message: 'code must be exactly 4 characters' })

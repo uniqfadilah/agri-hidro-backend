@@ -9,6 +9,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   await knex('tandons').insert({
     id: randomUUID(),
+    name: 'Example Tandon',
     code: '1000',
     jwt_secret: '12345678',
     max_level_water: 100,

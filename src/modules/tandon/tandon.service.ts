@@ -14,6 +14,7 @@ import { UpdateTandonDto } from './dto/update-tandon.dto';
 
 export type TandonResponse = {
   id: string;
+  name: string | null;
   code: string;
   jwt_secret: string;
   max_level_water: number;
@@ -41,6 +42,7 @@ export class TandonService {
     const rows = await Tandon.query()
       .select(
         'id',
+        'name',
         'code',
         'jwt_secret',
         'max_level_water',
@@ -100,6 +102,7 @@ export class TandonService {
     }
 
     const insertPayload: Record<string, string> = {
+      name: dto.name,
       code,
       jwtSecret,
       maxLevelWater: String(dto.max_level_water),
@@ -158,6 +161,7 @@ export class TandonService {
     const patch: Record<string, string | null | Date> = {
       updatedAt: new Date(),
     };
+    if (dto.name !== undefined) patch.name = dto.name;
     if (dto.code !== undefined) patch.code = dto.code;
     if (dto.jwt_secret !== undefined) patch.jwtSecret = dto.jwt_secret;
     if (dto.max_level_water !== undefined)
@@ -260,6 +264,7 @@ export class TandonService {
   private toResponse(row: Tandon): TandonResponse {
     return {
       id: row.id,
+      name: row.name ?? null,
       code: row.code,
       jwt_secret: row.jwtSecret,
       max_level_water: Number(row.maxLevelWater),

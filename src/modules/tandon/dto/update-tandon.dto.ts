@@ -9,6 +9,10 @@ import {
 export class UpdateTandonDto {
   @IsOptional()
   @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
   @Length(4, 4, { message: 'code must be exactly 4 characters' })
   code?: string;
 

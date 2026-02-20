@@ -17,6 +17,7 @@ export class Tandon extends BaseModel {
       required: ['code', 'jwtSecret', 'maxLevelWater', 'minLevelWater', 'currentLevelWater'],
       properties: {
         id: { type: 'string', format: 'uuid' },
+        name: { type: ['string', 'null'] },
         code: { type: 'string', minLength: 1, maxLength: 20 },
         jwtSecret: { type: 'string', minLength: 8, maxLength: 8 },
         maxLevelWater: { type: ['number', 'string'] },
@@ -30,6 +31,7 @@ export class Tandon extends BaseModel {
   }
 
   declare id: string;
+  declare name: string | null;
   declare code: string;
   declare jwtSecret: string;
   declare maxLevelWater: string;
