@@ -13,6 +13,8 @@ import { Item } from './item.model';
 import { Material } from './material.model';
 import { MaterialSeller } from './material-seller.model';
 import { Seller } from './seller.model';
+import { Tandon } from './tandon.model';
+import { TandonReport } from './tandon-report.model';
 import { User } from './user.model';
 
 export { BaseModel } from './base.model';
@@ -26,6 +28,8 @@ export { Item } from './item.model';
 export { Material } from './material.model';
 export { MaterialSeller } from './material-seller.model';
 export { Seller } from './seller.model';
+export { Tandon } from './tandon.model';
+export { TandonReport } from './tandon-report.model';
 export { User } from './user.model';
 export type { InvoiceStatus } from './invoice.model';
 export type { Role } from './user.model';

@@ -13,6 +13,7 @@ import { ItemModule } from './modules/item/item.module';
 import { MaterialModule } from './modules/material/material.module';
 import { MaterialSellerModule } from './modules/material-seller/material-seller.module';
 import { SellerModule } from './modules/seller/seller.module';
+import { TandonModule } from './modules/tandon/tandon.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -28,6 +29,7 @@ import { UsersModule } from './modules/users/users.module';
     MaterialModule,
     MaterialSellerModule,
     ExpenseModule,
+    TandonModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
