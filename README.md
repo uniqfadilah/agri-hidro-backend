@@ -117,6 +117,24 @@ docker compose -f docker-compose.prod.yml logs -f app
 | Migrate (first run) | `docker compose -f docker-compose.dev.yml run --rm app npm run knex:migrate:latest` | `docker compose -f docker-compose.prod.yml run --rm app npm run knex:migrate:latest` |
 | Logs                | `docker compose -f docker-compose.dev.yml logs -f app` | `docker compose -f docker-compose.prod.yml logs -f app` |
 
+### Update Docker and run migrations
+
+Rebuild images, start containers, then run migrations:
+
+**Development:**
+
+```bash
+docker compose -f docker-compose.dev.yml up -d --build && docker compose -f docker-compose.dev.yml run --rm app npm run knex:migrate:latest
+```
+
+**Production:**
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml run --rm app npm run knex:migrate:latest
+```
+
+(Production containers also run migrations on startup when `DATABASE_URL` is set; the `run --rm app npm run knex:migrate:latest` step is optional if you prefer to rely on that.)
+
 ---
 
 ## Development
