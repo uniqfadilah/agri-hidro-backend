@@ -90,10 +90,17 @@ cp .env.example .env
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-Migrations run on container start. To run them manually:
+Migrations run on container start. To run them manually, **rebuild the image first** so the container includes your latest migration files (prod image copies migrations at build time):
 
 ```bash
+docker compose -f docker-compose.prod.yml build app
 docker compose -f docker-compose.prod.yml run --rm app npm run knex:migrate:latest
+```
+
+Or in one step (rebuild then migrate):
+
+```bash
+docker compose -f docker-compose.prod.yml run --rm --build app npm run knex:migrate:latest
 ```
 
 **Stop:**
@@ -114,7 +121,7 @@ docker compose -f docker-compose.prod.yml logs -f app
 |---------------------|--------------------------------------------------|--------------------------------------------------|
 | Start               | `docker compose -f docker-compose.dev.yml up --build`  | `docker compose -f docker-compose.prod.yml up -d --build` |
 | Stop                | `docker compose -f docker-compose.dev.yml down`       | `docker compose -f docker-compose.prod.yml down`       |
-| Migrate (first run) | `docker compose -f docker-compose.dev.yml run --rm app npm run knex:migrate:latest` | `docker compose -f docker-compose.prod.yml run --rm app npm run knex:migrate:latest` |
+| Migrate (first run) | `docker compose -f docker-compose.dev.yml run --rm app npm run knex:migrate:latest` | `docker compose -f docker-compose.prod.yml build app` then `run --rm app npm run knex:migrate:latest` |
 | Logs                | `docker compose -f docker-compose.dev.yml logs -f app` | `docker compose -f docker-compose.prod.yml logs -f app` |
 
 ### Update Docker and run migrations
@@ -132,6 +139,8 @@ docker compose -f docker-compose.dev.yml up -d --build && docker compose -f dock
 ```bash
 docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml run --rm app npm run knex:migrate:latest
 ```
+
+For prod, the migration runs inside the **built** image, so new migration files are only included after a rebuild. If you added migrations after the last build, run `docker compose -f docker-compose.prod.yml build app` first, or use `run --rm --build app ...` to rebuild before migrating.
 
 (Production containers also run migrations on startup when `DATABASE_URL` is set; the `run --rm app npm run knex:migrate:latest` step is optional if you prefer to rely on that.)
 
