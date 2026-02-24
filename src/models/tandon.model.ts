@@ -24,6 +24,7 @@ export class Tandon extends BaseModel {
         minLevelWater: { type: ['number', 'string'] },
         currentLevelWater: { type: ['number', 'string'] },
         tandonHeight: { type: ['number', 'string', 'null'] },
+        status: { type: 'string', enum: ['full', 'refill'] },
         createdAt: { type: ['string', 'object'], format: 'date-time' },
         updatedAt: { type: ['string', 'object'], format: 'date-time' },
       },
@@ -38,6 +39,7 @@ export class Tandon extends BaseModel {
   declare minLevelWater: string;
   declare currentLevelWater: string;
   declare tandonHeight: string | null;
+  declare status: 'full' | 'refill';
   declare createdAt: Date;
   declare updatedAt: Date;
 }

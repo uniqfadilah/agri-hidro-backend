@@ -1,4 +1,5 @@
 import {
+  IsIn,
   IsNumber,
   IsOptional,
   IsString,
@@ -40,4 +41,9 @@ export class UpdateTandonDto {
   @IsNumber()
   @Min(0, { message: 'tandon_height must be a positive number' })
   tandon_height?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['full', 'refill'], { message: 'status must be full or refill' })
+  status?: 'full' | 'refill';
 }

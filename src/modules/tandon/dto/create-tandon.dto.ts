@@ -1,4 +1,5 @@
 import {
+  IsIn,
   IsNumber,
   IsOptional,
   IsString,
@@ -47,4 +48,10 @@ export class CreateTandonDto {
   @Expose()
   @Transform(({ value, obj }) => value ?? obj?.tandonHeight)
   tandon_height: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['full', 'refill'], { message: 'status must be full or refill' })
+  @Expose()
+  status?: 'full' | 'refill';
 }

@@ -221,7 +221,46 @@ docker compose -f docker-compose.prod.yml up -d --build && docker compose -f doc
 
 ### Cloudflare Tunnel (optional)
 
-Run **cloudflared on the host** (not in Docker). Install from GitHub (not in default apt):
+Run the tunnel **outside** the app’s docker-compose (so it’s separate from `docker-compose.prod.yml`).
+
+**Cloudflared on host vs container:**  
+If cloudflared runs **on the host** (binary), it connects to `http://127.0.0.1:8080` on the **host**. That only reaches your app if the container’s port is **published** to the host. Our `docker-compose.prod.yml` already exposes `8080:8080`, so host `127.0.0.1:8080` is the app. If the port weren’t exposed, you’d get connection refused.
+
+**Option A – Docker (standalone container):**  
+Containers can’t reach the host’s `localhost`, so the tunnel must use the app’s Docker network or host network.
+
+**A1 – Same network as the app (works on Linux, Mac, Windows):**
+
+```bash
+# Start app + db
+docker compose -f docker-compose.prod.yml up -d --build
+
+# Run tunnel on the same network so it can reach the app by service name
+docker run -d --restart unless-stopped --name cloudflared-tunnel \
+  --network agri-hidro-backend_default \
+  cloudflare/cloudflared:latest \
+  tunnel --no-autoupdate run --token "$CLOUDFLARE_TUNNEL_TOKEN"
+```
+
+In **Cloudflare Zero Trust** → your tunnel → **Public Hostname** → **Private Service**: set the URL to **`http://app:8080`** (not localhost).  
+If your compose project name is different, use that network: `docker network ls` and pick the one like `<project>_default`.
+
+**A2 – Linux only (host network):** If you prefer to keep `localhost:8080` in Cloudflare, run cloudflared with **`--net host`** (or `--network host`) so the container shares the host network and can reach `127.0.0.1:8080`:
+
+```bash
+docker run -d --restart unless-stopped --name cloudflared-tunnel \
+  --net host \
+  cloudflare/cloudflared:latest \
+  tunnel --no-autoupdate run --token "$CLOUDFLARE_TUNNEL_TOKEN"
+```
+
+Then in Cloudflare the Private Service can stay **`http://localhost:8080`** (or **`http://127.0.0.1:8080`**).
+
+**A3 – Docker Desktop (Mac/Windows):** Use the host’s special hostname: in Cloudflare set the Private Service to **`http://host.docker.internal:8080`**, and run the tunnel without `--network` (default bridge). No `--network host` on Mac/Windows.
+
+Stop the tunnel: `docker stop cloudflared-tunnel && docker rm cloudflared-tunnel`
+
+**Option B – Binary on the host.** Install cloudflared from GitHub (not in default apt):
 
   ```bash
   docker compose -f docker-compose.prod.yml up -d --build

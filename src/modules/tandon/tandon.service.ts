@@ -21,6 +21,7 @@ export type TandonResponse = {
   min_level_water: number;
   current_level_water: number;
   tandon_height: number | null;
+  status: 'full' | 'refill';
   createdAt: Date;
   updatedAt: Date;
 };
@@ -49,6 +50,7 @@ export class TandonService {
         'min_level_water',
         'current_level_water',
         'tandon_height',
+        'status',
         'created_at',
         'updated_at',
       )
@@ -109,6 +111,7 @@ export class TandonService {
       minLevelWater: String(dto.min_level_water),
       currentLevelWater: String(dto.current_level_water),
       tandonHeight: String(dto.tandon_height),
+      status: dto.status as 'full' | 'refill',
     };
     const tandon = await Tandon.query().insertAndFetch(insertPayload);
     return this.toResponse(tandon);
@@ -203,11 +206,17 @@ export class TandonService {
     const minLevel = Number(tandon.minLevelWater);
     const maxLevel = Number(tandon.maxLevelWater);
 
-    if (valueToStore <= minLevel) {
+    if (valueToStore <= minLevel && tandon.status !== 'refill') {
+      await Tandon.query().patchAndFetchById(tandon.id, {
+        status: 'refill',
+      });
       await TandonReport.query().insert({
         tandonCode: tandon.code,
       });
-    } else if (valueToStore >= maxLevel) {
+    } else if (valueToStore >= maxLevel && tandon.status !== 'full') {
+      await Tandon.query().patchAndFetchById(tandon.id, {
+        status: 'full',
+      });
       const latest = await TandonReport.query()
         .where('tandon_code', tandon.code)
         .orderBy('created_at', 'desc')
@@ -271,6 +280,7 @@ export class TandonService {
       min_level_water: Number(row.minLevelWater),
       current_level_water: Number(row.currentLevelWater),
       tandon_height: row.tandonHeight != null ? Number(row.tandonHeight) : null,
+      status: row?.status as 'full' | 'refill',
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };
