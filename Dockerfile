@@ -22,7 +22,7 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/knexfile.ts ./
 COPY --from=builder /app/migrations ./migrations
-COPY --from=builder /app/seeds ./seeds
+RUN mkdir -p seeds
 
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
