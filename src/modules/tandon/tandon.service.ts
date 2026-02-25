@@ -8,6 +8,7 @@ import {
 import { randomInt } from 'node:crypto';
 
 import { Tandon, TandonReport } from '../../models';
+import { FirebaseService } from '../firebase/firebase.service';
 import { DeviceUpdateWaterDto } from './dto/device-update-water.dto';
 import { CreateTandonDto } from './dto/create-tandon.dto';
 import { UpdateTandonDto } from './dto/update-tandon.dto';
@@ -39,6 +40,8 @@ function randomDigits(length: number): string {
 
 @Injectable()
 export class TandonService {
+  constructor(private readonly firebaseService: FirebaseService) {}
+
   async findAll(): Promise<TandonResponse[]> {
     const rows = await Tandon.query()
       .select(
@@ -213,6 +216,11 @@ export class TandonService {
       await TandonReport.query().insert({
         tandonCode: tandon.code,
       });
+      await this.firebaseService.sendTandonStatusNotification(
+        tandon.code,
+        'refill',
+        tandon.name,
+      );
     } else if (valueToStore >= maxLevel && tandon.status !== 'full') {
       await Tandon.query().patchAndFetchById(tandon.id, {
         status: 'full',
@@ -226,6 +234,11 @@ export class TandonService {
           updatedAt: new Date(),
         });
       }
+      await this.firebaseService.sendTandonStatusNotification(
+        tandon.code,
+        'full',
+        tandon.name,
+      );
     }
 
     const updated = await Tandon.query().patchAndFetchById(tandon.id, {
