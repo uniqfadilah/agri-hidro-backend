@@ -16,8 +16,7 @@ on:
 
 jobs:
   deploy:
-    # Run on your private server (self-hosted runner) so no public SSH is needed.
-    # To use GitHub-hosted runner + SSH instead, change to: runs-on: ubuntu-latest
+    environment: production
     runs-on: [self-hosted]
     if: >
       github.event_name == 'workflow_dispatch' ||
@@ -31,6 +30,7 @@ jobs:
           set -e
           APP_DIR="${APP_DIR:-$HOME/agri-hidro-backend}"
           cd "$APP_DIR" || { echo "APP_DIR not found: $APP_DIR. Set vars.APP_DIR in repo Settings → Variables."; exit 1; }
+          if [ -f .env ]; then set -a; . ./.env; set +a; fi
           git pull
           docker compose -f docker-compose.prod.yml build app
           docker compose -f docker-compose.prod.yml run --rm app npm run knex:migrate:latest

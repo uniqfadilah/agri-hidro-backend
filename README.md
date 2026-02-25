@@ -125,12 +125,16 @@ The deploy job runs **on your server** via a GitHub Actions self-hosted runner. 
 - Run the runner as a service so it stays up (the setup script offers this).
 - The runner will run jobs in the repo’s workspace (e.g. `~/work/<repo>/<repo>`). The deploy workflow does **not** use that checkout; it `cd`s into your app directory and runs `git pull` and `docker compose` there.
 
-**3. Set the app directory (optional)**
+**3. Create the `production` environment (required for deploy)**
 
-- Repo **Settings → Secrets and variables → Actions → Variables**.
-- Add variable `APP_DIR` = path to the app on the server (e.g. `/home/ubuntu/agri-hidro-backend`). If you don’t set it, the workflow uses `$HOME/agri-hidro-backend` on the runner.
+- Repo **Settings → Environments → New environment** → name it **`production`**.
+- Optionally add **Environment variables** (e.g. `APP_DIR` = path to the app on the server). The deploy job uses this environment and reads **`.env`** on the server after `cd` into the app dir, so any vars from `.env` are available for the deploy script.
 
-**4. Git pull on the server**
+**4. Set the app directory (optional)**
+
+- In the **production** environment (or **Settings → Variables**): add variable `APP_DIR` = path to the app on the server (e.g. `/home/ubuntu/agri-hidro-backend`). If you don’t set it, the workflow uses `$HOME/agri-hidro-backend` on the runner.
+
+**5. Git pull on the server**
 
 - So `git pull` works without prompts, either:
   - Clone with HTTPS and a [Personal Access Token](https://github.com/settings/tokens) (repo scope), or  
