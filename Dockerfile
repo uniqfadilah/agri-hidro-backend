@@ -1,16 +1,16 @@
-# Build stage
-FROM node:22-alpine AS builder
+# Build stage (Node 20 matches CI matrix)
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps
+RUN npm ci
 
 COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:22-alpine AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
