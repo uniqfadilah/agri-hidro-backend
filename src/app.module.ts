@@ -13,6 +13,7 @@ import { InvoiceModule } from './modules/invoice/invoice.module';
 import { ItemModule } from './modules/item/item.module';
 import { MaterialModule } from './modules/material/material.module';
 import { MaterialSellerModule } from './modules/material-seller/material-seller.module';
+import { PushModule } from './modules/push/push.module';
 import { SellerModule } from './modules/seller/seller.module';
 import { TandonModule } from './modules/tandon/tandon.module';
 import { UsersModule } from './modules/users/users.module';
@@ -31,6 +32,7 @@ import { UsersModule } from './modules/users/users.module';
     MaterialModule,
     MaterialSellerModule,
     ExpenseModule,
+    PushModule,
     TandonModule,
   ],
   controllers: [AppController],

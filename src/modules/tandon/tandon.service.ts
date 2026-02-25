@@ -9,6 +9,7 @@ import { randomInt } from 'node:crypto';
 
 import { Tandon, TandonReport } from '../../models';
 import { FirebaseService } from '../firebase/firebase.service';
+import { PushService } from '../push/push.service';
 import { DeviceUpdateWaterDto } from './dto/device-update-water.dto';
 import { CreateTandonDto } from './dto/create-tandon.dto';
 import { UpdateTandonDto } from './dto/update-tandon.dto';
@@ -40,7 +41,10 @@ function randomDigits(length: number): string {
 
 @Injectable()
 export class TandonService {
-  constructor(private readonly firebaseService: FirebaseService) {}
+  constructor(
+    private readonly firebaseService: FirebaseService,
+    private readonly pushService: PushService,
+  ) {}
 
   async findAll(): Promise<TandonResponse[]> {
     const rows = await Tandon.query()
@@ -210,21 +214,17 @@ export class TandonService {
     const maxLevel = Number(tandon.maxLevelWater);
 
     if (valueToStore <= minLevel && tandon.status !== 'refill') {
-      await Tandon.query().patchAndFetchById(tandon.id, {
-        status: 'refill',
-      });
-      await TandonReport.query().insert({
-        tandonCode: tandon.code,
-      });
+      await Tandon.query().patchAndFetchById(tandon.id, { status: 'refill' });
+      await TandonReport.query().insert({ tandonCode: tandon.code });
+      const tokens = await this.pushService.getTokens();
       await this.firebaseService.sendTandonStatusNotification(
         tandon.code,
         'refill',
         tandon.name,
+        tokens,
       );
     } else if (valueToStore >= maxLevel && tandon.status !== 'full') {
-      await Tandon.query().patchAndFetchById(tandon.id, {
-        status: 'full',
-      });
+      await Tandon.query().patchAndFetchById(tandon.id, { status: 'full' });
       const latest = await TandonReport.query()
         .where('tandon_code', tandon.code)
         .orderBy('created_at', 'desc')
@@ -234,10 +234,12 @@ export class TandonService {
           updatedAt: new Date(),
         });
       }
+      const tokens = await this.pushService.getTokens();
       await this.firebaseService.sendTandonStatusNotification(
         tandon.code,
         'full',
         tandon.name,
+        tokens,
       );
     }
 
