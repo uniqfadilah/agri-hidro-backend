@@ -1,0 +1,38 @@
+# Deploy to server after CI passes on push to main/master.
+#
+# Private server (no public SSH):
+#   Use a self-hosted runner on the server. No secrets needed; job runs locally.
+#
+# Public server (optional):
+#   Set SSH_PRIVATE_KEY, SERVER_HOST, SERVER_USER and use ubuntu-latest.
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    # Run on your private server (self-hosted runner) so no public SSH is needed.
+    # To use GitHub-hosted runner + SSH instead, change to: runs-on: ubuntu-latest
+    runs-on: [self-hosted]
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+
+    steps:
+      - name: Deploy (pull, migrate, rebuild)
+        env:
+          APP_DIR: ${{ vars.APP_DIR }}
+        run: |
+          set -e
+          APP_DIR="${APP_DIR:-$HOME/agri-hidro-backend}"
+          cd "$APP_DIR" || { echo "APP_DIR not found: $APP_DIR. Set vars.APP_DIR in repo Settings → Variables."; exit 1; }
+          git pull
+          docker compose -f docker-compose.prod.yml build app
+          docker compose -f docker-compose.prod.yml run --rm app npm run knex:migrate:latest
+          docker compose -f docker-compose.prod.yml up -d
+          docker compose -f docker-compose.prod.yml images

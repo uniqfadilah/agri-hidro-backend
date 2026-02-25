@@ -100,7 +100,7 @@ jobs:
           docker run --rm agri-hidro-backend:test node --version
           docker run --rm --entrypoint "" agri-hidro-backend:test ls -la dist/src/main.js
 
-      - name: Run container (entrypoint: migrations + app)
+      - name: "Run container (entrypoint: migrations + app)"
         run: |
           docker run --rm -e DATABASE_URL="$DATABASE_URL" --network host agri-hidro-backend:test node dist/src/main.js &
           sleep 5

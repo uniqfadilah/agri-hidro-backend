@@ -35,6 +35,150 @@ postgresql://USER:PASSWORD@localhost:5432/DB_NAME
 
 ---
 
+## Server setup (production)
+
+On your server (VPS, Raspberry Pi, etc.):
+
+**1. Install Docker and Docker Compose**
+
+- Linux (Debian/Ubuntu): [Install Docker Engine](https://docs.docker.com/engine/install/) and [Docker Compose plugin](https://docs.docker.com/compose/install/).
+- Ensure the app user can run `docker` and `docker compose`.
+
+**2. Clone the repo and go to the project**
+
+```bash
+git clone <your-repo-url> agri-hidro-backend
+cd agri-hidro-backend
+```
+
+**3. Create production `.env`**
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set at least:
+
+| Variable             | Example / note                                      |
+|----------------------|-----------------------------------------------------|
+| `POSTGRES_PASSWORD`  | Strong password (used by `db` and by `DATABASE_URL`) |
+| `JWT_SECRET`         | Long random string (e.g. `openssl rand -hex 32`)    |
+| `POSTGRES_DB`        | `agri_hidro` (optional; this is the default)        |
+| `POSTGRES_USER`      | `postgres` (optional; this is the default)          |
+
+Do **not** set `DATABASE_URL` when using `docker-compose.prod.yml` — it is built from `POSTGRES_*` and the `db` service hostname.
+
+Optional (push notifications): `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`.
+
+**4. Build and start app + database**
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+- Migrations run automatically on app startup.
+- App listens on **port 8080** (override with `PORT` in `.env` if needed).
+
+**5. Check that it’s running**
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml logs -f app
+```
+
+API: `http://<server-ip>:8080`. Put a reverse proxy (Nginx/Caddy) or [Cloudflare Tunnel](#cloudflare-tunnel-optional) in front if you want HTTPS or a domain.
+
+**6. Updates (after `git pull`)**
+
+```bash
+git pull
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Migrations run again on app startup; for new migration files the image is rebuilt so they are included.
+
+---
+
+## GitHub Actions: auto-deploy on push
+
+When you **push to `main` or `master`**, the **Deploy** workflow runs **after CI passes** and updates the server (pull + rebuild). No need to SSH in manually.
+
+### Private server (no public SSH) – recommended
+
+Your server is not reachable from the internet, so GitHub’s runners cannot SSH into it. Use one of these:
+
+---
+
+#### Option A: Self-hosted runner (auto on every push)
+
+The deploy job runs **on your server** via a GitHub Actions self-hosted runner. No public SSH, no secrets.
+
+**1. On the server**
+
+- Clone the repo and complete [Server setup](#server-setup-production) (e.g. `$HOME/agri-hidro-backend`, `.env`, first `docker compose ... up -d --build`).
+- Install Docker (and Docker Compose). Ensure the user that will run the runner can run `docker compose` and `git`.
+
+**2. Install the GitHub Actions runner**
+
+- Repo **Settings → Actions → Runners → New self-hosted runner**.
+- Follow the instructions for your OS (Linux). Use the default runner group.
+- Run the runner as a service so it stays up (the setup script offers this).
+- The runner will run jobs in the repo’s workspace (e.g. `~/work/<repo>/<repo>`). The deploy workflow does **not** use that checkout; it `cd`s into your app directory and runs `git pull` and `docker compose` there.
+
+**3. Set the app directory (optional)**
+
+- Repo **Settings → Secrets and variables → Actions → Variables**.
+- Add variable `APP_DIR` = path to the app on the server (e.g. `/home/ubuntu/agri-hidro-backend`). If you don’t set it, the workflow uses `$HOME/agri-hidro-backend` on the runner.
+
+**4. Git pull on the server**
+
+- So `git pull` works without prompts, either:
+  - Clone with HTTPS and a [Personal Access Token](https://github.com/settings/tokens) (repo scope), or  
+  - Use SSH and add a deploy key to the server and to the repo (Deploy keys).
+
+After this, every push to `main`/`master` (after CI succeeds) triggers the Deploy workflow on your runner and runs `git pull` + `docker compose ... up -d --build` on the server.
+
+---
+
+#### Option B: Cron on the server (no runner)
+
+The server pulls and rebuilds on a schedule. No GitHub Actions runner, no inbound access.
+
+**1. On the server**
+
+- Clone the repo and complete [Server setup](#server-setup-production).
+- Make the script executable:  
+  `chmod +x /path/to/agri-hidro-backend/scripts/deploy-on-server.sh`
+
+**2. Schedule it (e.g. every 5 minutes)**
+
+```bash
+crontab -e
+# add (adjust path and user):
+*/5 * * * * /home/YOUR_USER/agri-hidro-backend/scripts/deploy-on-server.sh >> /var/log/agri-deploy.log 2>&1
+```
+
+The script only runs `git pull` and `docker compose ... up -d --build` when there are new commits on the current branch. Ensure `git pull` works (HTTPS token or SSH key).
+
+---
+
+### Public server (optional: SSH from GitHub)
+
+If your server **is** reachable by SSH from the internet, you can use a GitHub-hosted runner and SSH instead:
+
+1. In `.github/workflows/deploy.yml`, change `runs-on: [self-hosted]` to `runs-on: ubuntu-latest`.
+2. Add back the SSH step (see git history or the [original workflow](https://github.com/...) that used `appleboy/ssh-action` with `SSH_PRIVATE_KEY`, `SERVER_HOST`, `SERVER_USER`).
+3. Add secrets: `SSH_PRIVATE_KEY`, `SERVER_HOST`, `SERVER_USER` (and `SERVER_PORT` if needed).
+
+---
+
+### When deploy runs (self-hosted / cron)
+
+- **Self-hosted:** After a **push** to `main` or `master`, once **CI** succeeds, the **Deploy** workflow runs on your runner and updates the server. You can also run **Actions → Deploy → Run workflow** manually.
+- **Cron:** The server checks for new commits on the schedule you set (e.g. every 5 min) and deploys only when there are changes.
+
+---
+
 ## How to run Docker
 
 Use **Docker Compose** with the project’s compose files. You need Docker and Docker Compose installed.
