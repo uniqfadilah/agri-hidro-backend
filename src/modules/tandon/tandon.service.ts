@@ -205,11 +205,7 @@ export class TandonService {
     if (dto.jwt_secret !== tandon.jwtSecret) {
       throw new UnauthorizedException('Invalid jwt_secret');
     }
-    const tandonHeight =
-      tandon.tandonHeight != null && tandon.tandonHeight !== ''
-        ? Number(tandon.tandonHeight)
-        : 0;
-    const valueToStore = tandonHeight - dto.current_level_water;
+    const valueToStore = dto.current_level_water;
     const minLevel = Number(tandon.minLevelWater);
     const maxLevel = Number(tandon.maxLevelWater);
 
