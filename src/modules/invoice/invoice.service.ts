@@ -10,6 +10,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 
 import {
   Customer,
@@ -18,6 +20,8 @@ import {
   Item,
   type InvoiceStatus,
 } from '../../models';
+
+dayjs.extend(utc);
 import type { InvoiceStatusType } from './dto/update-invoice-status.dto';
 import { formatPrice } from '../../utils/format-price';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -123,12 +127,11 @@ export class InvoiceService {
     if (options?.customer_id) {
       query.where('customer_id', options.customer_id);
     }
-    if (options?.month) {
-      const [y, m] = options.month.split('-').map(Number);
-      const start = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
-      const end = new Date(Date.UTC(y, m, 1, 0, 0, 0, 0));
-      query.where('created_at', '>=', start).where('created_at', '<', end);
-    }
+    const monthStr =
+      options?.month ?? dayjs.utc().format('YYYY-MM');
+    const start = dayjs.utc(`${monthStr}-01`).startOf('month').toDate();
+    const end = dayjs.utc(`${monthStr}-01`).add(1, 'month').startOf('month').toDate();
+    query.where('created_at', '>=', start).where('created_at', '<', end);
 
     const rows = (await query) as (Invoice & {
       customer?: { name: string };
