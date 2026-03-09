@@ -51,7 +51,7 @@ export class CreateTandonDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['full', 'refill'], { message: 'status must be full or refill' })
+  @IsIn(['full', 'refill', 'need_action'], { message: 'status must be full, refill, or need_action' })
   @Expose()
-  status?: 'full' | 'refill';
+  status?: 'full' | 'refill' | 'need_action';
 }

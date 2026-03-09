@@ -58,7 +58,14 @@ export class CustomersService {
 
   async findAll(): Promise<CustomerListItem[]> {
     const rows = await Customer.query()
-      .select('id', 'name', 'pic', 'pic_phone_number', 'created_at', 'updated_at')
+      .select(
+        'id',
+        'name',
+        'pic',
+        'pic_phone_number',
+        'created_at',
+        'updated_at',
+      )
       .orderBy('created_at', 'desc');
     return rows.map((r) => ({
       id: r.id,
@@ -95,10 +102,7 @@ export class CustomersService {
     await Customer.query().deleteById(id);
   }
 
-  async update(
-    id: string,
-    dto: UpdateCustomerDto,
-  ): Promise<CustomerListItem> {
+  async update(id: string, dto: UpdateCustomerDto): Promise<CustomerListItem> {
     const customer = await Customer.query().findById(id);
     if (!customer) {
       throw new NotFoundException('Customer not found');

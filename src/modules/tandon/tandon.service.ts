@@ -23,7 +23,20 @@ export type TandonResponse = {
   min_level_water: number;
   current_level_water: number;
   tandon_height: number | null;
-  status: 'full' | 'refill';
+  status: 'full' | 'refill' | 'need_action';
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type TandonPublicResponse = {
+  id: string;
+  name: string | null;
+  code: string;
+  max_level_water: number;
+  min_level_water: number;
+  current_level_water: number;
+  tandon_height: number | null;
+  status: 'full' | 'refill' | 'need_action';
   createdAt: Date;
   updatedAt: Date;
 };
@@ -45,6 +58,20 @@ export class TandonService {
     private readonly firebaseService: FirebaseService,
     private readonly pushService: PushService,
   ) {}
+
+  async findOnePublic(
+    code: string,
+    jwt: string,
+  ): Promise<TandonPublicResponse> {
+    const tandon = await Tandon.query().findOne({ code });
+    if (!tandon) {
+      throw new NotFoundException('Tandon not found');
+    }
+    if (jwt !== tandon.jwtSecret) {
+      throw new UnauthorizedException('Invalid jwt_secret');
+    }
+    return this.toPublicResponse(tandon);
+  }
 
   async findAll(): Promise<TandonResponse[]> {
     const rows = await Tandon.query()
@@ -118,7 +145,7 @@ export class TandonService {
       minLevelWater: String(dto.min_level_water),
       currentLevelWater: String(dto.current_level_water),
       tandonHeight: String(dto.tandon_height),
-      status: dto.status as 'full' | 'refill',
+      status: dto.status as 'full' | 'refill' | 'need_action',
     };
     const tandon = await Tandon.query().insertAndFetch(insertPayload);
     return this.toResponse(tandon);
@@ -281,6 +308,21 @@ export class TandonService {
     }
   }
 
+  private toPublicResponse(row: Tandon): TandonPublicResponse {
+    return {
+      id: row.id,
+      name: row.name ?? null,
+      code: row.code,
+      max_level_water: Number(row.maxLevelWater),
+      min_level_water: Number(row.minLevelWater),
+      current_level_water: Number(row.currentLevelWater),
+      tandon_height: row.tandonHeight != null ? Number(row.tandonHeight) : null,
+      status: row?.status,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
+  }
+
   private toResponse(row: Tandon): TandonResponse {
     return {
       id: row.id,
@@ -291,7 +333,7 @@ export class TandonService {
       min_level_water: Number(row.minLevelWater),
       current_level_water: Number(row.currentLevelWater),
       tandon_height: row.tandonHeight != null ? Number(row.tandonHeight) : null,
-      status: row?.status as 'full' | 'refill',
+      status: row?.status,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

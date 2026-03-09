@@ -14,7 +14,13 @@ export class Tandon extends BaseModel {
   static get jsonSchema() {
     return {
       type: 'object',
-      required: ['code', 'jwtSecret', 'maxLevelWater', 'minLevelWater', 'currentLevelWater'],
+      required: [
+        'code',
+        'jwtSecret',
+        'maxLevelWater',
+        'minLevelWater',
+        'currentLevelWater',
+      ],
       properties: {
         id: { type: 'string', format: 'uuid' },
         name: { type: ['string', 'null'] },
@@ -24,7 +30,7 @@ export class Tandon extends BaseModel {
         minLevelWater: { type: ['number', 'string'] },
         currentLevelWater: { type: ['number', 'string'] },
         tandonHeight: { type: ['number', 'string', 'null'] },
-        status: { type: 'string', enum: ['full', 'refill'] },
+        status: { type: 'string', enum: ['full', 'refill', 'need_action'] },
         createdAt: { type: ['string', 'object'], format: 'date-time' },
         updatedAt: { type: ['string', 'object'], format: 'date-time' },
       },
@@ -39,7 +45,7 @@ export class Tandon extends BaseModel {
   declare minLevelWater: string;
   declare currentLevelWater: string;
   declare tandonHeight: string | null;
-  declare status: 'full' | 'refill';
+  declare status: 'full' | 'refill' | 'need_action';
   declare createdAt: Date;
   declare updatedAt: Date;
 }

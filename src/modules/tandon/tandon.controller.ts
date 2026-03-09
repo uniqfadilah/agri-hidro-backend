@@ -1,20 +1,20 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
   Param,
   Patch,
   Post,
+  Body,
   UseGuards,
 } from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { DeviceUpdateWaterDto } from './dto/device-update-water.dto';
 import { CreateTandonDto } from './dto/create-tandon.dto';
 import { UpdateTandonDto } from './dto/update-tandon.dto';
 import {
+  type TandonPublicResponse,
   type TandonReportResponse,
   type TandonResponse,
   TandonService,
@@ -24,12 +24,13 @@ import {
 export class TandonController {
   constructor(private readonly tandonService: TandonService) {}
 
-  @Post('device/update-water')
+  @Get(':code/:jwt')
   @Public()
-  deviceUpdateWater(
-    @Body() dto: DeviceUpdateWaterDto,
-  ): Promise<TandonResponse> {
-    return this.tandonService.deviceUpdateWater(dto);
+  async findOnePublic(
+    @Param('code') code: string,
+    @Param('jwt') jwt: string,
+  ): Promise<TandonPublicResponse> {
+    return await this.tandonService.findOnePublic(code, jwt);
   }
 
   @Get()

@@ -44,6 +44,6 @@ export class UpdateTandonDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['full', 'refill'], { message: 'status must be full or refill' })
-  status?: 'full' | 'refill';
+  @IsIn(['full', 'refill', 'need_action'], { message: 'status must be full, refill, or need_action' })
+  status?: 'full' | 'refill' | 'need_action';
 }

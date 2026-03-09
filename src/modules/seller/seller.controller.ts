@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Body,
   Controller,
@@ -35,7 +34,6 @@ export class SellerController {
   findMaterialSellersBySellerId(
     @Param('id') id: string,
   ): Promise<MaterialSellerResponse[]> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     return this.materialSellerService.findAllBySellerId(id);
   }
 

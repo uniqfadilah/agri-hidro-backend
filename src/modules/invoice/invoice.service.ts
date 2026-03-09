@@ -1,9 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import {
   BadRequestException,
   ForbiddenException,
@@ -127,10 +123,13 @@ export class InvoiceService {
     if (options?.customer_id) {
       query.where('customer_id', options.customer_id);
     }
-    const monthStr =
-      options?.month ?? dayjs.utc().format('YYYY-MM');
+    const monthStr = options?.month ?? dayjs.utc().format('YYYY-MM');
     const start = dayjs.utc(`${monthStr}-01`).startOf('month').toDate();
-    const end = dayjs.utc(`${monthStr}-01`).add(1, 'month').startOf('month').toDate();
+    const end = dayjs
+      .utc(`${monthStr}-01`)
+      .add(1, 'month')
+      .startOf('month')
+      .toDate();
     query.where('created_at', '>=', start).where('created_at', '<', end);
 
     const rows = (await query) as (Invoice & {

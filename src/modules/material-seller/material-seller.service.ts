@@ -44,9 +44,7 @@ export class MaterialSellerService {
     return this.toResponse(row);
   }
 
-  async findAllBySellerId(
-    sellerId: string,
-  ): Promise<MaterialSellerResponse[]> {
+  async findAllBySellerId(sellerId: string): Promise<MaterialSellerResponse[]> {
     const seller = await Seller.query().findById(sellerId);
     if (!seller) {
       throw new NotFoundException('Seller not found');
@@ -151,17 +149,15 @@ export class MaterialSellerService {
     await MaterialSeller.query().deleteById(id);
   }
 
-  private toResponse(
-    row: {
-      id: string;
-      materialId: string;
-      sellerId: string;
-      price: string | number;
-      createdAt: Date;
-      updatedAt: Date;
-      material?: { materialName: string };
-    },
-  ): MaterialSellerResponse {
+  private toResponse(row: {
+    id: string;
+    materialId: string;
+    sellerId: string;
+    price: string | number;
+    createdAt: Date;
+    updatedAt: Date;
+    material?: { materialName: string };
+  }): MaterialSellerResponse {
     const out: MaterialSellerResponse = {
       id: row.id,
       material_id: row.materialId,
